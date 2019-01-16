@@ -1,0 +1,24 @@
+#! /usr/bin/env ruby
+
+require_relative 'lib/github/organization'
+require_relative 'lib/gemfile_juicer'
+require_relative 'lib/gemfile_lock_juicer'
+
+org_name = ARGV[0]
+org = Github::Organization.new org_name, ENV['token']
+
+case ARGV[1]
+when nil
+  org.gather_files('Gemfile')
+     .each { |repo_name, gemfile| GemfileJuicer.squeeze repo_name, gemfile }
+
+  GemfileJuicer.print
+when 'version'
+  gem_name = ARGV[2]
+  org.gather_files('Gemfile.lock')
+     .each { |repo_name, gemfile_lock| GemfileLockJuicer.squeeze repo_name, gemfile_lock, gem_name }
+
+  GemfileLockJuicer.print
+else
+  puts 'Usage: env token=TOKEN ./orgem organizaton_name [version rails]'
+end
